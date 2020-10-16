@@ -1,4 +1,4 @@
-import { dim } from 'https://deno.land/std@0.74.0/fmt/colors.ts'
+import { bold, dim } from 'https://deno.land/std@0.74.0/fmt/colors.ts'
 import { existsSync } from 'https://deno.land/std@0.74.0/fs/exists.ts'
 import { walk } from 'https://deno.land/std@0.74.0/fs/walk.ts'
 import { basename, dirname, join } from 'https://deno.land/std@0.74.0/path/mod.ts'
@@ -21,7 +21,7 @@ async function publish(current: Verion, raw: string) {
     const versions = [
         `${major}.${minor}.${patch + 1}`,
         `${major}.${minor + 1}.0`,
-        `${major + 1}.0.0`,
+        `${bold((major + 1).toString())}.0.0`,
     ]
     if (stage) {
         versions.unshift(`${major}.${minor}.${patch}-${stage.name}${stage.withoutDot ? '' : '.'}${stage.index + 1}`)
@@ -32,7 +32,7 @@ async function publish(current: Verion, raw: string) {
             `${major}.${minor}.${patch}-rc.1`,
         )
     }
-    const answer = await ask([...versions.map((v, i) => `${i + 1} ${dim('→')} v${v}`), 'upgrade to:'].join('\n'))
+    const answer = await ask('\n' + [...versions.map((v, i) => `  ${bold((i + 1).toString())} ${dim('→')} v${v}`), '\nupgrade to:'].join('\n'))
     const n = parseInt(answer)
     if (!isNaN(n) && n > 0 && n <= versions.length) {
         let up = versions[n - 1]
