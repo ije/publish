@@ -21,7 +21,7 @@ async function publish(current: Verion, raw: string) {
     const versions = [
         `${major}.${minor}.${patch + 1}`,
         `${major}.${minor + 1}.0`,
-        `${bold((major + 1).toString())}.0.0`,
+        `${major + 1}.0.0`,
     ]
     if (stage) {
         versions.unshift(`${major}.${minor}.${patch}-${stage.name}${stage.withoutDot ? '' : '.'}${stage.index + 1}`)
