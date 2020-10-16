@@ -1,6 +1,6 @@
 # Publish
 
-**Publish** your packge with one command.
+**Publish** your packge with one command in [Deno](https://deno.land).
 
 ### Installation
 ```bash
