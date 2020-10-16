@@ -1,6 +1,6 @@
 # Publish
 
-**Publish** your packge to github/gitlab with one command.
+**Publish** your packge with one command.
 
 ### Installation
 ```bash
