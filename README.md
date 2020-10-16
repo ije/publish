@@ -20,10 +20,10 @@ $ publish
   5 → v1.0.0-beta.1
   6 → v1.0.0-rc.1
 
-upgrade to:
+upgrade to: ▏
 ```
 
-**Publish** will create a `version.ts` file in your package if it don't exists.
+**Publish** will create a `version.ts` file in your package if it don't exist.
 
 ```javascript
 export const version = '1.0.0'
