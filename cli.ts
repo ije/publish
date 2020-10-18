@@ -57,7 +57,7 @@ async function publish(current: Verion, raw: string) {
         await run('git', 'add', '.', '--all')
         await run('git', 'commit', '-m', message || `v${up}`)
         await run('git', 'tag', `v${up}`)
-        if (await confirm(`push to remote repository ?`)) {
+        if (await confirm(`push to remote repository?`)) {
             await run('git', 'push', 'origin', 'master', '--tag', `v${up}`)
         }
     }
