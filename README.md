@@ -4,7 +4,7 @@
 
 ### Installation
 ```bash
-deno install -A -f -n publish https://deno.land/x/publish@1.3.0/cli.ts
+deno install -A -f -n publish https://deno.land/x/publish@v1.3.0/cli.ts
 ```
 
 ### Usage
