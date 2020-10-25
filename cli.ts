@@ -1,6 +1,5 @@
 import { bold, dim } from 'https://deno.land/std@0.74.0/fmt/colors.ts'
 import { existsSync } from 'https://deno.land/std@0.74.0/fs/exists.ts'
-import { walk } from 'https://deno.land/std@0.74.0/fs/walk.ts'
 import { basename, dirname, join } from 'https://deno.land/std@0.74.0/path/mod.ts'
 
 interface Verion {
@@ -47,6 +46,14 @@ async function publish(current: Verion, raw: string) {
                 return
             }
         }
+        const eggFile = join(dirname(file), 'egg.json')
+        if (existsSync(eggFile)) {
+            const text = await Deno.readTextFile(eggFile)
+            const eggConfig = JSON.parse(text)
+            if (typeof eggConfig === 'object' && eggConfig != null && 'version' in eggConfig) {
+                await Deno.writeTextFile(eggFile, text.replace(/"version":(\s*)"[^"]+"/, `"version":$1"${up}"`))
+            }
+        }
         if (!existsSync(join(dirname(file), '.git'))) {
             if (await confirm(`initialize repository ?`)) {
                 await run('git', 'init')
@@ -59,6 +66,9 @@ async function publish(current: Verion, raw: string) {
         await run('git', 'tag', `v${up}`)
         if (await confirm(`push to remote repository?`)) {
             await run('git', 'push', 'origin', 'master', '--tag', `v${up}`)
+        }
+        if (existsSync(eggFile) && await confirm(`push to nest.land?`)) {
+            await run('eggs', 'publish')
         }
     }
 }
@@ -89,48 +99,42 @@ async function run(...cmd: string[]) {
 }
 
 if (import.meta.main) {
-    const walkOptions = {
-        includeDirs: false,
-        exts: ['.js', '.ts', '.mjs'],
-        maxDepth: 1,
-    }
-    for await (const { path } of walk(Deno.cwd(), walkOptions)) {
-        const name = basename(path)
-        switch (name) {
-            case 'version.ts':
-            case 'version.js':
-            case 'version.mjs':
-                let { default: versionAsDefault, version: versonString } = await import('file://' + path)
-                if (typeof versonString !== 'string') {
-                    versonString = versionAsDefault
-                }
-                if (typeof versonString === 'string' && versonString.length > 0) {
-                    const [mainVersion, stage] = versonString.split('-')
-                    const [major, minor, patch] = mainVersion.replace(/^v/, '').split('.').map(s => parseInt(s))
-                    if (major >= 0 && minor >= 0 && patch >= 0) {
-                        const version: Verion = {
-                            major,
-                            minor,
-                            patch,
-                            startsWithV: mainVersion.charAt(0).toLowerCase() === 'v',
-                            file: path
-                        }
-                        if (/^[a-z]+\.?\d+/.test(stage)) {
-                            version.stage = {
-                                name: stage.replace(/[\.\d]+/g, ''),
-                                index: parseInt(stage.replace(/[\.a-z]+/gi, '')),
-                                withoutDot: !/\./.test(stage)
-                            }
-                        }
-                        await publish(version, versonString)
-                        Deno.exit(0)
+    const versionFiles = ['version.ts', 'version.js', 'version.mjs']
+    for (const name of versionFiles) {
+        const path = join(Deno.cwd(), name)
+        if (existsSync(path)) {
+            let { default: versionAsDefault, version: versonString } = await import('file://' + path)
+            if (typeof versonString !== 'string') {
+                versonString = versionAsDefault
+            }
+            if (typeof versonString === 'string' && versonString.length > 0) {
+                const [mainVersion, stage] = versonString.split('-')
+                const [major, minor, patch] = mainVersion.replace(/^v/, '').split('.').map(s => parseInt(s))
+                if (major >= 0 && minor >= 0 && patch >= 0) {
+                    const version: Verion = {
+                        major,
+                        minor,
+                        patch,
+                        startsWithV: mainVersion.charAt(0).toLowerCase() === 'v',
+                        file: path
                     }
+                    if (/^[a-z]+\.?\d+/.test(stage)) {
+                        version.stage = {
+                            name: stage.replace(/[\.\d]+/g, ''),
+                            index: parseInt(stage.replace(/[\.a-z]+/gi, '')),
+                            withoutDot: !/\./.test(stage)
+                        }
+                    }
+                    await publish(version, versonString)
+                    Deno.exit(0)
                 }
-                console.log(`'${name}' don't export an valid verison string with format '1.2.3[-rc.4]'`)
-                Deno.exit(1)
+            }
+            console.log(`'${name}' don't export an valid version string with format '1.2.3[-rc.4]'`)
+            Deno.exit(1)
         }
     }
 
+    // create a new version file
     await publish(
         {
             major: 0,
