@@ -1,6 +1,6 @@
 # Publish
 
-**Publish** your packge with one command in [Deno](https://deno.land).
+**Publish** your module with one command in [Deno](https://deno.land).
 
 ### Installation
 ```bash
@@ -10,7 +10,7 @@ deno install -A -f -n publish https://deno.land/x/publish@v1.3.0/cli.ts
 ### Usage
 
 ```bash
-$ cd $YOUR_PACKAGE_DIR
+$ cd $YOUR_MODULE_DIR
 $ publish
 
   1 → v1.0.1
@@ -23,7 +23,7 @@ $ publish
 upgrade to: ▏
 ```
 
-**Publish** will create a `version.ts` file in your package if it don't exist.
+**Publish** will create a `version.ts` file in your module root directory if it don't exist.
 
 ```javascript
 export const version = '1.0.0'
