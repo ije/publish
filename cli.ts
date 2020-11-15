@@ -40,7 +40,7 @@ async function publish(current: Verion, raw: string) {
             const text = await Deno.readTextFile(file)
             await Deno.writeTextFile(file, text.replace(raw, `${startsWithV ? 'v' : ''}${up}`))
         } else {
-            if (await confirm(`create '${basename(file)}'?`)) {
+            if (await confirm(`create '${basename(file)}' ?`)) {
                 await Deno.writeTextFile(file, `export const version = "${up}"`)
             } else {
                 return
@@ -64,10 +64,10 @@ async function publish(current: Verion, raw: string) {
         await run('git', 'add', '.', '--all')
         await run('git', 'commit', '-m', message || `v${up}`)
         await run('git', 'tag', `v${up}`)
-        if (await confirm(`push to remote repository?`)) {
+        if (await confirm(`push to remote repository ?`)) {
             await run('git', 'push', 'origin', 'master', '--tag', `v${up}`)
         }
-        if (existsSync(eggFile) && await confirm(`push to nest.land?`)) {
+        if (existsSync(eggFile) && await confirm(`push to nest.land ?`)) {
             await run('eggs', 'publish')
         }
     }
@@ -81,10 +81,10 @@ async function ask(question: string = ':', stdin = Deno.stdin, stdout = Deno.std
     return answer.trim()
 }
 
-async function confirm(question: string = 'are you sure?') {
-    let y: string
-    while (!(y = (await ask(question)).trim())) { }
-    return /^1|y(es)?$/i.test(y)
+async function confirm(question: string = 'are you sure ?') {
+    let a: string
+    while (!/^(y|n)$/i.test(a = (await ask(question + ' [y/n]')).trim())) { }
+    return a.toLowerCase() === 'y'
 }
 
 async function run(...cmd: string[]) {
@@ -129,7 +129,7 @@ if (import.meta.main) {
                     Deno.exit(0)
                 }
             }
-            console.log(`'${name}' don't export an valid version string with format '1.2.3[-rc.4]'`)
+            console.log(`'${name}' needs to export a version string with format '[v]1.2.3[-rc.4]'`)
             Deno.exit(1)
         }
     }
