@@ -90,11 +90,10 @@ async function confirm(question: string = 'are you sure ?') {
 async function run(...cmd: string[]) {
     const p = Deno.run({
         cmd,
-        stdout: 'piped',
-        stderr: 'piped'
+        stdout: 'inherit',
+        stderr: 'inherit'
     })
-    Deno.stdout.write(await p.output())
-    Deno.stderr.write(await p.stderrOutput())
+    await p.status()
     p.close()
 }
 
