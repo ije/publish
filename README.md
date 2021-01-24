@@ -24,8 +24,8 @@ $ publish
 upgrade to: ▏
 ```
 
-**Publish** will create a `version.ts` file in your module root directory if it dones't exist.
+**Publish** will create a `version.ts` file in your module root directory if it doesn't exist.
 
 ```javascript
-export const version = '1.0.0'
+export const VERSION = '1.0.0'
 ```
