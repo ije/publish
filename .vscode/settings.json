@@ -1,21 +1,16 @@
 {
     "files.eol": "\n",
     "files.trimTrailingWhitespace": true,
-    "files.exclude": {
-        "**/.git": true,
-        "**/.DS_Store": true,
-        "**/Thumbs.db": true
-    },
+    "typescript.format.semicolons": "remove",
+    "typescript.preferences.quoteStyle": "single",
     "[typescript]": {
         "editor.defaultFormatter": "vscode.typescript-language-features",
         "editor.formatOnSave": true,
         "editor.formatOnPaste": true,
         "editor.codeActionsOnSave": {
-            "source.organizeImports": true,
+            "source.organizeImports": true
         }
     },
     "deno.enable": true,
-    "deno.import_intellisense_origins": {
-        "https://deno.land": false
-    }
+    "deno.import_intellisense_autodiscovery": false
 }
