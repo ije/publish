@@ -5,7 +5,7 @@
 ### Installation
 
 ```bash
-deno install -A -f -n publish https://deno.land/x/publish@v1.7.0/cli.ts
+deno install -A -f -n publish https://deno.land/x/publish@v1.8.0/cli.ts
 ```
 
 ### Usage
@@ -37,13 +37,13 @@ You can add a custom script (support `publish.ts` or `publish.js` in your module
 ```ts
 // publish.ts
 
-/* `prepublish` will be invoked before publish */
+/* `prepublish` will be invoked before publish, return `false` to prevent the publish */
 export async function prepublish(version: string, message: string) {
-    console.log('on prepublish', version, message)
+  console.log('on prepublish', version, message)
 }
 
 /* `postpublish` will be invoked after publish */
 export async function postpublish() {
-    console.log('on postpublish')
+  console.log('on postpublish')
 }
 ```
