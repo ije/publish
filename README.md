@@ -26,6 +26,24 @@ upgrade to: ▏
 
 **Publish** will create a `version.ts` file in your module root directory if it doesn't exist.
 
-```javascript
+```ts
 export const VERSION = '1.0.0'
+```
+
+### Custom Script
+
+You can add a custom script (support `publish.ts` or `publish.js` in your module root directory) to do somehting before or after publish:
+
+```ts
+// publish.ts
+
+/* `prepublish` will be invoked before publish */
+export async function prepublish(version: string, message: string) {
+    console.log('on prepublish', version, message)
+}
+
+/* `postpublish` will be invoked after publish */
+export async function postpublish() {
+    console.log('on postpublish')
+}
 ```
