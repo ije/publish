@@ -1,8 +1,9 @@
-import { bold, dim } from 'https://deno.land/std@0.84.0/fmt/colors.ts'
-import { existsSync } from 'https://deno.land/std@0.84.0/fs/exists.ts'
-import { basename, dirname, join } from 'https://deno.land/std@0.84.0/path/mod.ts'
+import { bold, dim } from 'https://deno.land/std@0.85.0/fmt/colors.ts'
+import { existsSync } from 'https://deno.land/std@0.85.0/fs/exists.ts'
+import { basename, dirname, join } from 'https://deno.land/std@0.85.0/path/mod.ts'
 
-interface Verion {
+type Verion = {
+    raw: string
     major: number
     minor: number
     patch: number
@@ -15,8 +16,13 @@ interface Verion {
     file: string
 }
 
-async function publish(current: Verion, raw: string, retry = false) {
-    const { major, minor, patch, startsWithV, stage, file } = current
+type Scripts = {
+    prepublish?(version: string, message: string): Promise<void>
+    postpublish?(): Promise<void>
+}
+
+async function publish(currentVersion: Verion, scripts: Scripts, retry = false) {
+    const { raw, major, minor, patch, startsWithV, stage, file } = currentVersion
     const versions = [
         `${major}.${minor}.${patch + 1}`,
         `${major}.${minor + 1}.0`,
@@ -37,8 +43,12 @@ async function publish(current: Verion, raw: string, retry = false) {
     ].filter(Boolean).flat().join('\n'))
     const n = parseInt(answer)
     if (!isNaN(n) && n > 0 && n <= versions.length) {
-        let up = versions[n - 1]
+        const up = versions[n - 1]
         const message = await ask('upgrade message:')
+        const { prepublish, postpublish } = scripts
+        if (prepublish) {
+            await prepublish(up, message)
+        }
         if (existsSync(file)) {
             const text = await Deno.readTextFile(file)
             await Deno.writeTextFile(file, text.replace(raw, `${startsWithV ? 'v' : ''}${up}`))
@@ -62,8 +72,11 @@ async function publish(current: Verion, raw: string, retry = false) {
         if (await confirm(`push to remote repository?`)) {
             await run('git', 'push', 'origin', 'master', '--tag', `v${up}`)
         }
+        if (postpublish) {
+            await postpublish()
+        }
     } else {
-        await publish(current, raw, true)
+        await publish(currentVersion, scripts, true)
     }
 }
 
@@ -92,8 +105,22 @@ async function run(...cmd: string[]) {
 }
 
 if (import.meta.main) {
-    const versionFiles = ['version.ts', 'version.js', 'version.mjs']
-    for (const name of versionFiles) {
+    const scripts: Scripts = {}
+    for (const name of ['publish.ts', 'publish.js']) {
+        const path = join(Deno.cwd(), name)
+        if (existsSync(path)) {
+            const { prepublish, postpublish } = await import('file://' + path)
+            if (typeof prepublish === 'function') {
+                scripts.prepublish = prepublish
+            }
+            if (typeof postpublish === 'function') {
+                scripts.postpublish = postpublish
+            }
+            break
+        }
+    }
+
+    for (const name of ['version.ts', 'version.js']) {
         const path = join(Deno.cwd(), name)
         if (existsSync(path)) {
             const { default: rawVersionAsDefault, VERSION: rawVERSION, version: rawVersion } = await import('file://' + path)
@@ -105,6 +132,7 @@ if (import.meta.main) {
                     const [major, minor, patch] = mainVersion.replace(/^v/, '').split('.').map(s => parseInt(s))
                     if (major >= 0 && minor >= 0 && patch >= 0) {
                         const version: Verion = {
+                            raw: v,
                             major,
                             minor,
                             patch,
@@ -118,7 +146,7 @@ if (import.meta.main) {
                                 withoutDot: !/\./.test(stage)
                             }
                         }
-                        await publish(version, v)
+                        await publish(version, scripts)
                         Deno.exit(0)
                     }
                 }
@@ -131,13 +159,14 @@ if (import.meta.main) {
     // create a new version file
     await publish(
         {
+            raw: '0.0.0',
             major: 0,
             minor: 0,
             patch: 0,
             startsWithV: false,
             file: join(Deno.cwd(), './version.ts')
         },
-        '0.0.0'
+        scripts
     )
     Deno.exit(0)
 }
