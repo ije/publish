@@ -16,12 +16,12 @@ type Verion = {
     file: string
 }
 
-type Scripts = {
-    prepublish?(version: string, message: string): Promise<void>
+type Script = {
+    prepublish?(version: string, message: string): Promise<false | void>
     postpublish?(): Promise<void>
 }
 
-async function publish(currentVersion: Verion, scripts: Scripts, retry = false) {
+async function publish(currentVersion: Verion, script: Script, retry = false) {
     const { raw, major, minor, patch, startsWithV, stage, file } = currentVersion
     const versions = [
         `${major}.${minor}.${patch + 1}`,
@@ -45,9 +45,9 @@ async function publish(currentVersion: Verion, scripts: Scripts, retry = false) 
     if (!isNaN(n) && n > 0 && n <= versions.length) {
         const up = versions[n - 1]
         const message = await ask('upgrade message:')
-        const { prepublish, postpublish } = scripts
-        if (prepublish) {
-            await prepublish(up, message)
+        const { prepublish, postpublish } = script
+        if (prepublish && await prepublish(up, message) === false) {
+            return
         }
         if (existsSync(file)) {
             const text = await Deno.readTextFile(file)
@@ -76,7 +76,7 @@ async function publish(currentVersion: Verion, scripts: Scripts, retry = false) 
             await postpublish()
         }
     } else {
-        await publish(currentVersion, scripts, true)
+        await publish(currentVersion, script, true)
     }
 }
 
@@ -105,16 +105,16 @@ async function run(...cmd: string[]) {
 }
 
 if (import.meta.main) {
-    const scripts: Scripts = {}
+    const script: Script = {}
     for (const name of ['publish.ts', 'publish.js']) {
         const path = join(Deno.cwd(), name)
         if (existsSync(path)) {
             const { prepublish, postpublish } = await import('file://' + path)
             if (typeof prepublish === 'function') {
-                scripts.prepublish = prepublish
+                script.prepublish = prepublish
             }
             if (typeof postpublish === 'function') {
-                scripts.postpublish = postpublish
+                script.postpublish = postpublish
             }
             break
         }
@@ -146,7 +146,7 @@ if (import.meta.main) {
                                 withoutDot: !/\./.test(stage)
                             }
                         }
-                        await publish(version, scripts)
+                        await publish(version, script)
                         Deno.exit(0)
                     }
                 }
@@ -166,7 +166,7 @@ if (import.meta.main) {
             startsWithV: false,
             file: join(Deno.cwd(), './version.ts')
         },
-        scripts
+        script
     )
     Deno.exit(0)
 }
