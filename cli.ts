@@ -66,9 +66,10 @@ async function publish(currentVersion: Verion, script: Script, retry = false) {
         return
       }
     }
+    const tag = `${currentVersion.startsWithV ? 'v' : ''}${up}`
     await run('git', 'add', '.', '--all')
-    await run('git', 'commit', '-m', message || `v${up}`)
-    await run('git', 'tag', `v${up}`)
+    await run('git', 'commit', '-m', message || tag)
+    await run('git', 'tag', tag)
     if (await confirm(`push to remote repository?`)) {
       await run('git', 'push', 'origin', 'master', '--tag', `v${up}`)
     }
