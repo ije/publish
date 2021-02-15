@@ -2,7 +2,7 @@ import { bold, dim } from 'https://deno.land/std@0.85.0/fmt/colors.ts'
 import { existsSync } from 'https://deno.land/std@0.85.0/fs/exists.ts'
 import { basename, dirname, join } from 'https://deno.land/std@0.85.0/path/mod.ts'
 
-type Verion = {
+type Version = {
   raw: string
   major: number
   minor: number
@@ -21,7 +21,7 @@ type Script = {
   postpublish?(): Promise<void>
 }
 
-async function publish(currentVersion: Verion, script: Script, retry = false) {
+async function publish(currentVersion: Version, script: Script, retry = false) {
   const { raw, major, minor, patch, startsWithV, stage, file } = currentVersion
   const versions = [
     `${major}.${minor}.${patch + 1}`,
@@ -38,7 +38,7 @@ async function publish(currentVersion: Verion, script: Script, retry = false) {
     )
   }
   const answer = await ask([
-    !retry && ['', ...versions.map((v, i) => `  ${bold((i + 1).toString())} ${dim('→')} v${v}`), ''],
+    !retry && ['', ...versions.map((v, i) => `  ${bold((i + 1).toString())} ${dim('→')} ${currentVersion.startsWithV ? 'v' : ''}${v}`), ''],
     'upgrade to:'
   ].filter(Boolean).flat().join('\n'))
   const n = parseInt(answer)
@@ -71,7 +71,7 @@ async function publish(currentVersion: Verion, script: Script, retry = false) {
     await run('git', 'commit', '-m', message || tag)
     await run('git', 'tag', tag)
     if (await confirm(`push to remote repository?`)) {
-      await run('git', 'push', 'origin', 'master', '--tag', `v${up}`)
+      await run('git', 'push', 'origin', 'master', '--tag', tag)
     }
     if (postpublish) {
       await postpublish()
@@ -132,7 +132,7 @@ if (import.meta.main) {
           const [mainVersion, stage] = v.split('-')
           const [major, minor, patch] = mainVersion.replace(/^v/, '').split('.').map(s => parseInt(s))
           if (major >= 0 && minor >= 0 && patch >= 0) {
-            const version: Verion = {
+            const version: Version = {
               raw: v,
               major,
               minor,
