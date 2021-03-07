@@ -12,5 +12,5 @@
     }
   },
   "deno.enable": true,
-  "deno.import_intellisense_autodiscovery": false
+  "deno.unstable": false
 }
