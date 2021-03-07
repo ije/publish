@@ -1,5 +1,5 @@
 /** `postpublish` will be invoked before publish, return `false` to prevent the publish. */
-export async function prepublish(version: string, message: string) {
+export async function prepublish(version: string) {
   const readme = await Deno.readTextFile('./README.md')
 
   await Deno.writeTextFile('./README.md', readme.replace(
@@ -8,7 +8,7 @@ export async function prepublish(version: string, message: string) {
   ))
 }
 
-/** `postpublish` will be invoked after publish. */
-export async function postpublish() {
-  console.log('Done')
+/** `postpublish` will be invoked after published. */
+export async function postpublish(version: string) {
+  console.log('Upgraded to', version)
 }

@@ -1,6 +1,6 @@
-import { bold, dim } from 'https://deno.land/std@0.85.0/fmt/colors.ts'
-import { existsSync } from 'https://deno.land/std@0.85.0/fs/exists.ts'
-import { basename, dirname, join } from 'https://deno.land/std@0.85.0/path/mod.ts'
+import { bold, dim } from 'https://deno.land/std@0.89.0/fmt/colors.ts'
+import { existsSync } from 'https://deno.land/std@0.89.0/fs/exists.ts'
+import { basename, dirname, join } from 'https://deno.land/std@0.89.0/path/mod.ts'
 
 type Version = {
   raw: string
@@ -17,8 +17,8 @@ type Version = {
 }
 
 type Script = {
-  prepublish?(version: string, message: string): Promise<false | void>
-  postpublish?(): Promise<void>
+  prepublish?(version: string): Promise<false | void>
+  postpublish?(version: string): Promise<void>
 }
 
 async function publish(currentVersion: Version, script: Script, retry = false) {
@@ -43,18 +43,18 @@ async function publish(currentVersion: Version, script: Script, retry = false) {
   ].filter(Boolean).flat().join('\n'))
   const n = parseInt(answer)
   if (!isNaN(n) && n > 0 && n <= versions.length) {
-    const up = versions[n - 1]
+    const nextVersion = versions[n - 1]
     const message = await ask('upgrade message:')
     const { prepublish, postpublish } = script
-    if (prepublish && await prepublish(up, message) === false) {
+    if (prepublish && await prepublish(nextVersion) === false) {
       return
     }
     if (existsSync(file)) {
       const text = await Deno.readTextFile(file)
-      await Deno.writeTextFile(file, text.replace(raw, `${startsWithV ? 'v' : ''}${up}`))
+      await Deno.writeTextFile(file, text.replace(raw, `${startsWithV ? 'v' : ''}${nextVersion}`))
     } else {
       if (await confirm(`create '${basename(file)}'?`)) {
-        await Deno.writeTextFile(file, `export const VERSION = "${up}"`)
+        await Deno.writeTextFile(file, `export const VERSION = "${nextVersion}"`)
       } else {
         return
       }
@@ -66,7 +66,8 @@ async function publish(currentVersion: Version, script: Script, retry = false) {
         return
       }
     }
-    const tag = `${currentVersion.startsWithV ? 'v' : ''}${up}`
+    const tagStartsWithV = await confirm(`should the tag start with 'v'?`)
+    const tag = `${tagStartsWithV ? 'v' : ''}${nextVersion}`
     await run('git', 'add', '.', '--all')
     await run('git', 'commit', '-m', message || tag)
     await run('git', 'tag', tag)
@@ -74,7 +75,7 @@ async function publish(currentVersion: Version, script: Script, retry = false) {
       await run('git', 'push', 'origin', 'master', '--tag', tag)
     }
     if (postpublish) {
-      await postpublish()
+      await postpublish(nextVersion)
     }
   } else {
     await publish(currentVersion, script, true)
@@ -91,7 +92,7 @@ async function ask(question: string = ':', stdin = Deno.stdin, stdout = Deno.std
 
 async function confirm(question: string = 'are you sure?') {
   let a: string
-  while (!/^(y|n)$/i.test(a = (await ask(question + ' [y/n]')).trim())) { }
+  while (!/^(y|n)$/i.test(a = (await ask(question + dim(' [y/n]'))).trim())) { }
   return a.toLowerCase() === 'y'
 }
 
