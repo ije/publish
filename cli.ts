@@ -1,6 +1,6 @@
-import { bold, dim } from 'https://deno.land/std@0.89.0/fmt/colors.ts'
-import { existsSync } from 'https://deno.land/std@0.89.0/fs/exists.ts'
-import { basename, dirname, join } from 'https://deno.land/std@0.89.0/path/mod.ts'
+import { bold, dim } from 'https://deno.land/std@0.93.0/fmt/colors.ts'
+import { existsSync } from 'https://deno.land/std@0.93.0/fs/exists.ts'
+import { basename, dirname, join } from 'https://deno.land/std@0.93.0/path/mod.ts'
 
 type Version = {
   raw: string
@@ -28,8 +28,20 @@ async function publish(currentVersion: Version, script: Script, retry = false) {
     `${major}.${minor + 1}.0`,
     `${major + 1}.0.0`,
   ]
-  if (stage) {
+
+  if (stage?.name === 'rc') {
     versions.unshift(`${major}.${minor}.${patch}-${stage.name}${stage.withoutDot ? '' : '.'}${stage.index + 1}`)
+  } else if (stage?.name === 'beta') {
+    versions.unshift(
+      `${major}.${minor}.${patch}-${stage.name}${stage.withoutDot ? '' : '.'}${stage.index + 1}`,
+      `${major}.${minor}.${patch}-rc.1`,
+    )
+  } else if (stage?.name === 'alpha') {
+    versions.unshift(
+      `${major}.${minor}.${patch}-${stage.name}${stage.withoutDot ? '' : '.'}${stage.index + 1}`,
+      `${major}.${minor}.${patch}-beta.1`,
+      `${major}.${minor}.${patch}-rc.1`,
+    )
   } else {
     versions.push(
       `${major}.${minor}.${patch}-alpha.1`,
