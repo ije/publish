@@ -83,9 +83,9 @@ async function publish(currentVersion: Version, script: Script, retry = false) {
     await run('git', 'add', '.', '--all')
     await run('git', 'commit', '-m', message || tag)
     await run('git', 'tag', tag)
-    if (await confirm(`push to remote repository?`)) {
-      const currentRemote = (await runAndOutput('git', 'remote')).split('\n')[0]
-      const currentBranch = await runAndOutput('git', 'branch', '--show-current')
+    const currentRemote = (await runAndOutput('git', 'remote')).split('\n')[0]
+    const currentBranch = await runAndOutput('git', 'branch', '--show-current')
+    if (await confirm(`push to remote '${currentRemote}' in '${currentBranch}' branch?`)) {
       await run('git', 'push', currentRemote, currentBranch, '--tag', tag)
     }
     if (postpublish) {
