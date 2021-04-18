@@ -84,7 +84,9 @@ async function publish(currentVersion: Version, script: Script, retry = false) {
     await run('git', 'commit', '-m', message || tag)
     await run('git', 'tag', tag)
     if (await confirm(`push to remote repository?`)) {
-      await run('git', 'push', 'origin', 'master', '--tag', tag)
+      const currentRemote = (await runAndOutput('git', 'remote')).split('\n')[0]
+      const currentBranch = await runAndOutput('git', 'branch', '--show-current')
+      await run('git', 'push', currentRemote, currentBranch, '--tag', tag)
     }
     if (postpublish) {
       await postpublish(nextVersion)
@@ -116,6 +118,18 @@ async function run(...cmd: string[]) {
   })
   await p.status()
   p.close()
+}
+
+async function runAndOutput(...cmd: string[]) {
+  const p = Deno.run({
+    cmd,
+    stdout: 'piped',
+    stderr: 'inherit'
+  })
+  const output = await p.output()
+  await p.status()
+  p.close()
+  return (new TextDecoder).decode(output).trim()
 }
 
 if (import.meta.main) {
