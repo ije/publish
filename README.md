@@ -5,7 +5,13 @@
 ### Installation
 
 ```bash
-deno install -A -f -n publish https://deno.land/x/publish@v1.12.1/cli.ts
+deno install -A -f -n publish https://deno.land/x/publish@v1.12.2/cli.ts
+```
+
+or use [land](https://deno.land/x/land) without installation:
+
+```
+land publish
 ```
 
 ### Usage
