@@ -1,28 +1,52 @@
-import { bold, dim } from 'https://deno.land/std@0.93.0/fmt/colors.ts'
-import { existsSync } from 'https://deno.land/std@0.93.0/fs/exists.ts'
-import { basename, dirname, join } from 'https://deno.land/std@0.93.0/path/mod.ts'
+import { bold, dim } from 'https://deno.land/std@0.95.0/fmt/colors.ts'
+import { existsSync } from 'https://deno.land/std@0.95.0/fs/exists.ts'
+import { basename, dirname, join } from 'https://deno.land/std@0.95.0/path/mod.ts'
 
 type Version = {
   raw: string
   major: number
   minor: number
   patch: number
+  startsWithV: boolean
   stage?: {
     name: string
     index: number
     withoutDot: boolean
   }
-  startsWithV: boolean
+  prepublish?(version: string): Promise<false | void>
+  postpublish?(version: string): Promise<void>
   file: string
 }
 
-type Script = {
-  prepublish?(version: string): Promise<false | void>
-  postpublish?(version: string): Promise<void>
+function createBlankVersionTS(version: string) {
+  return [
+    '/** `version` managed by https://deno.land/x/land/publish. */',
+    `export const VERSION = "${version}"`,
+    '',
+    '/** `prepublish` will be invoked before publish, return `false` to prevent the publish. */',
+    'export async function prepublish(version: string) {',
+    '  return true',
+    '}',
+    '',
+    '/** `postpublish` will be invoked after published. */',
+    'export async function postpublish(version: string) {',
+    '  console.log("Upgraded to", version)',
+    '}',
+  ].join('\n')
 }
 
-async function publish(currentVersion: Version, script: Script, retry = false) {
-  const { raw, major, minor, patch, startsWithV, stage, file } = currentVersion
+async function publish(currentVersion: Version, retry = false) {
+  const {
+    raw,
+    major,
+    minor,
+    patch,
+    startsWithV,
+    stage,
+    prepublish,
+    postpublish,
+    file
+  } = currentVersion
   const versions = [
     `${major}.${minor}.${patch + 1}`,
     `${major}.${minor + 1}.0`,
@@ -57,7 +81,6 @@ async function publish(currentVersion: Version, script: Script, retry = false) {
   if (!isNaN(n) && n > 0 && n <= versions.length) {
     const nextVersion = versions[n - 1]
     const message = await ask('upgrade message:')
-    const { prepublish, postpublish } = script
     if (prepublish && await prepublish(nextVersion) === false) {
       return
     }
@@ -66,7 +89,7 @@ async function publish(currentVersion: Version, script: Script, retry = false) {
       await Deno.writeTextFile(file, text.replace(raw, `${startsWithV ? 'v' : ''}${nextVersion}`))
     } else {
       if (await confirm(`create '${basename(file)}'?`)) {
-        await Deno.writeTextFile(file, `export const VERSION = "${nextVersion}"`)
+        await Deno.writeTextFile(file, createBlankVersionTS(nextVersion))
       } else {
         return
       }
@@ -92,7 +115,7 @@ async function publish(currentVersion: Version, script: Script, retry = false) {
       await postpublish(nextVersion)
     }
   } else {
-    await publish(currentVersion, script, true)
+    await publish(currentVersion, true)
   }
 }
 
@@ -133,25 +156,16 @@ async function runAndOutput(...cmd: string[]) {
 }
 
 if (import.meta.main) {
-  const script: Script = {}
-  for (const name of ['publish.ts', 'publish.js']) {
-    const path = join(Deno.cwd(), name)
-    if (existsSync(path)) {
-      const { prepublish, postpublish } = await import('file://' + path)
-      if (typeof prepublish === 'function') {
-        script.prepublish = prepublish
-      }
-      if (typeof postpublish === 'function') {
-        script.postpublish = postpublish
-      }
-      break
-    }
-  }
-
   for (const name of ['version.ts', 'version.js']) {
     const path = join(Deno.cwd(), name)
     if (existsSync(path)) {
-      const { default: rawVersionAsDefault, VERSION: rawVERSION, version: rawVersion } = await import('file://' + path)
+      const {
+        default: rawVersionAsDefault,
+        VERSION: rawVERSION,
+        version: rawVersion,
+        prepublish,
+        postpublish,
+      } = await import('file://' + path)
       const list = [rawVersionAsDefault, rawVERSION, rawVersion]
       for (let i = 0; i < list.length; i++) {
         const v = list[i]
@@ -165,6 +179,8 @@ if (import.meta.main) {
               minor,
               patch,
               startsWithV: mainVersion.charAt(0).toLowerCase() === 'v',
+              prepublish,
+              postpublish,
               file: path
             }
             if (/^[a-z]+\.?\d+/.test(stage)) {
@@ -174,7 +190,7 @@ if (import.meta.main) {
                 withoutDot: !/\./.test(stage)
               }
             }
-            await publish(version, script)
+            await publish(version)
             Deno.exit(0)
           }
         }
@@ -193,8 +209,7 @@ if (import.meta.main) {
       patch: 0,
       startsWithV: false,
       file: join(Deno.cwd(), './version.ts')
-    },
-    script
+    }
   )
   Deno.exit(0)
 }

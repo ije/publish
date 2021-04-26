@@ -1,12 +1,17 @@
 /** `version` managed by https://deno.land/x/land/publish. */
-export const VERSION = "1.0.0"
+export const VERSION = '1.12.2'
 
 /** `prepublish` will be invoked before publish, return `false` to prevent the publish. */
 export async function prepublish(version: string) {
-  return true
+  const readme = await Deno.readTextFile('./README.md')
+
+  await Deno.writeTextFile('./README.md', readme.replace(
+    /\/\/deno\.land\/x\/publish@v[\d\.]+\//,
+    `//deno.land/x/publish@v${version}/`
+  ))
 }
 
 /** `postpublish` will be invoked after published. */
 export async function postpublish(version: string) {
-  console.log("Upgraded to", version)
+  console.log('Upgraded to', version)
 }
