@@ -47,39 +47,40 @@ async function publish(currentVersion: Version, retry = false) {
     postpublish,
     file
   } = currentVersion
-  const versions = [
+  const version = [major, minor, patch].join('.')
+  const nextVersions = [
     `${major}.${minor}.${patch + 1}`,
     `${major}.${minor + 1}.0`,
     `${major + 1}.0.0`,
   ]
 
   if (stage?.name === 'rc') {
-    versions.unshift(`${major}.${minor}.${patch}-${stage.name}${stage.withoutDot ? '' : '.'}${stage.index + 1}`)
+    nextVersions.unshift(`${version}-${stage.name}${stage.withoutDot ? '' : '.'}${stage.index + 1}`)
   } else if (stage?.name === 'beta') {
-    versions.unshift(
-      `${major}.${minor}.${patch}-${stage.name}${stage.withoutDot ? '' : '.'}${stage.index + 1}`,
-      `${major}.${minor}.${patch}-rc.1`,
+    nextVersions.unshift(
+      `${version}-${stage.name}${stage.withoutDot ? '' : '.'}${stage.index + 1}`,
+      `${version}-rc.1`,
     )
   } else if (stage?.name === 'alpha') {
-    versions.unshift(
-      `${major}.${minor}.${patch}-${stage.name}${stage.withoutDot ? '' : '.'}${stage.index + 1}`,
-      `${major}.${minor}.${patch}-beta.1`,
-      `${major}.${minor}.${patch}-rc.1`,
+    nextVersions.unshift(
+      `${version}-${stage.name}${stage.withoutDot ? '' : '.'}${stage.index + 1}`,
+      `${version}-beta.1`,
+      `${version}-rc.1`,
     )
   } else {
-    versions.push(
-      `${major}.${minor}.${patch}-alpha.1`,
-      `${major}.${minor}.${patch}-beta.1`,
-      `${major}.${minor}.${patch}-rc.1`,
+    nextVersions.push(
+      `${version}-alpha.1`,
+      `${version}-beta.1`,
+      `${version}-rc.1`,
     )
   }
   const answer = await ask([
-    !retry && ['', ...versions.map((v, i) => `  ${bold((i + 1).toString())} ${dim('→')} ${currentVersion.startsWithV ? 'v' : ''}${v}`), ''],
+    !retry && ['', ...nextVersions.map((v, i) => `  ${bold((i + 1).toString())} ${dim('→')} ${currentVersion.startsWithV ? 'v' : ''}${v}`), ''],
     'upgrade to:'
   ].filter(Boolean).flat().join('\n'))
   const n = parseInt(answer)
-  if (!isNaN(n) && n > 0 && n <= versions.length) {
-    const nextVersion = versions[n - 1]
+  if (!isNaN(n) && n > 0 && n <= nextVersions.length) {
+    const nextVersion = nextVersions[n - 1]
     const message = await ask('upgrade message:')
     if (prepublish && await prepublish(nextVersion) === false) {
       return

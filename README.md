@@ -5,7 +5,7 @@
 ### Installation
 
 ```bash
-deno install -A -f -n publish https://deno.land/x/publish@v1.12.2/cli.ts
+deno install -A -f -n publish https://deno.land/x/publish@v1.13.0/cli.ts
 ```
 
 or use [land](https://deno.land/x/land) without installation:
@@ -36,13 +36,11 @@ upgrade to: ▏
 export const VERSION = '1.0.0'
 ```
 
-### Custom Script
+### Hook Functions
 
-You can add a custom script (support `publish.ts` or `publish.js` in your module root directory) to do somehting before or after publish:
+You can add hook functions in the `version.ts` to do some tasks before or after publish:
 
 ```ts
-// publish.ts
-
 /** `prepublish` will be invoked before publish, return `false` to prevent the publish */
 export async function prepublish(version: string) {
   console.log('on prepublish', version)
