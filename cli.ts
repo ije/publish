@@ -1,6 +1,6 @@
-import { bold, dim } from 'https://deno.land/std@0.95.0/fmt/colors.ts'
-import { existsSync } from 'https://deno.land/std@0.95.0/fs/exists.ts'
-import { basename, dirname, join } from 'https://deno.land/std@0.95.0/path/mod.ts'
+import { bold, dim } from 'https://deno.land/std@0.100.0/fmt/colors.ts'
+import { existsSync } from 'https://deno.land/std@0.100.0/fs/exists.ts'
+import { basename, dirname, join } from 'https://deno.land/std@0.100.0/path/mod.ts'
 
 type Version = {
   raw: string
