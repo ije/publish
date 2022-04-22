@@ -28,12 +28,12 @@ function createBlankVersionTS(version: string) {
     "",
     "/** `prepublish` will be invoked before publish, return `false` to prevent the publish. */",
     "export async function prepublish(version: string) {",
-    '  console.log("Upgrading to", version)',
+    `  console.log("Upgrading to", version)`,
     "}",
     "",
     "/** `postpublish` will be invoked after published. */",
     "export async function postpublish(version: string) {",
-    '  console.log("Upgraded to", version)',
+    `  console.log("Upgraded to", version)`,
     "}",
   ].join("\n");
 }
@@ -118,12 +118,12 @@ async function publish(currentVersion: Version, retry = false) {
       await Deno.writeTextFile(file, createBlankVersionTS(nextVersion));
     }
     if (await exists(join(dirname(file), ".git")) === false) {
-      if (await confirm(`git: initialize repository?`) === false) {
+      if (await confirm("git: initialize repository?") === false) {
         return;
       }
       await run("git", "init");
     }
-    const tagStartsWithV = await confirm(`should the tag start with 'v'?`);
+    const tagStartsWithV = await confirm("should the tag start with 'v'?");
     const tag = `${tagStartsWithV ? "v" : ""}${nextVersion}`;
     await run("git", "add", ".", "--all");
     await run("git", "commit", "-m", message || tag);
