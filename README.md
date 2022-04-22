@@ -1,6 +1,6 @@
 # Publish
 
-**Publish** your module with one command in [Deno](https://deno.land).
+**Publish** your module to [Deno Land](https://deno.land) with one command.
 
 ### Installation
 
