@@ -1,9 +1,9 @@
-import { bold, dim } from "https://deno.land/std@0.136.0/fmt/colors.ts";
+import { bold, dim } from "https://deno.land/std@0.145.0/fmt/colors.ts";
 import {
   basename,
   dirname,
   join,
-} from "https://deno.land/std@0.136.0/path/mod.ts";
+} from "https://deno.land/std@0.145.0/path/mod.ts";
 
 type Version = {
   raw: string;
@@ -101,7 +101,6 @@ async function publish(currentVersion: Version, retry = false) {
   const n = parseInt(answer);
   if (!isNaN(n) && n > 0 && n <= nextVersions.length) {
     const nextVersion = nextVersions[n - 1];
-    const message = await ask("upgrade message:");
     if (prepublish && await prepublish(nextVersion) === false) {
       return;
     }
@@ -126,7 +125,7 @@ async function publish(currentVersion: Version, retry = false) {
     const tagStartsWithV = await confirm("should the tag start with 'v'?");
     const tag = `${tagStartsWithV ? "v" : ""}${nextVersion}`;
     await run("git", "add", ".", "--all");
-    await run("git", "commit", "-m", message || tag);
+    await run("git", "commit", "-m", tag);
     await run("git", "tag", tag);
     const currentRemote = (await runAndOutput("git", "remote")).split("\n")[0];
     const currentBranch = await runAndOutput("git", "branch", "--show-current");
