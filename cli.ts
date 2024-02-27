@@ -98,8 +98,8 @@ async function publish(currentVersion: Version) {
   await run("git", "add", ".", "--all");
   await run("git", "commit", "-m", tag);
   await run("git", "tag", tag);
-  const currentRemote = (await $run("git", "remote")).split("\n")[0];
-  const currentBranch = await $run("git", "branch", "--show-current");
+  const currentRemote = (await $run("git", "remote")).trim();
+  const currentBranch = (await $run("git", "branch", "--show-current")).trim();
   if (
     await confirm(`push '${currentRemote}' on '${currentBranch}' branch to remote repository?`)
   ) {
