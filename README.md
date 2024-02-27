@@ -1,6 +1,6 @@
 # Publish
 
-**Publish** your module to [Deno Land](https://deno.land) with one command.
+Create git tag(version) and push to remote without any hassle.
 
 ### Installation
 
@@ -17,7 +17,7 @@ land publish
 ### Usage
 
 ```bash
-$ cd $YOUR_MODULE_DIR
+$ cd $YOUR_PROJECT_DIR
 $ publish
 
   1 → v1.0.1
@@ -30,7 +30,7 @@ $ publish
 upgrade to: ▏
 ```
 
-**Publish** will create a `version.ts` file in your module root directory if it doesn't exist.
+**Publish** will create a `version.ts` file in your project root directory if it doesn't exist.
 
 ```ts
 export const VERSION = '1.0.0'
@@ -38,16 +38,16 @@ export const VERSION = '1.0.0'
 
 ### Hook Functions
 
-You can add hook functions in the `version.ts` to do some tasks before or after publish:
+You can add hook functions in the `version.ts` to do some tasks before or after publish.
 
 ```ts
-/** `prepublish` will be invoked before publish, return `false` to prevent the publish */
-export async function prepublish(version: string) {
+/** `prepublish` will be invoked before publish, return `false` to prevent the publish. */
+export function prepublish(version: string) {
   console.log('on prepublish', version)
 }
 
-/** `postpublish` will be invoked after published */
-export async function postpublish(version: string) {
+/** `postpublish` will be invoked after published. */
+export function postpublish(version: string) {
   console.log('on postpublish', version)
 }
 ```
