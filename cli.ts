@@ -126,6 +126,9 @@ async function ask(question = ":") {
   await print(question + " ");
   const buf = new Uint8Array(8);
   const n = <number> await Deno.stdin.read(buf);
+  if (buf[0] === 13) { // enter
+    return "n"
+  }
   const answer = new TextDecoder().decode(buf.subarray(0, n));
   return answer.trim();
 }
@@ -162,9 +165,11 @@ async function select(list: string[]): Promise<number> {
 
 async function confirm(question = "are you sure?") {
   let a: string;
-  // deno-lint-ignore no-empty
-  while (!/^(y|n)$/i.test(a = (await ask(dim("? ") + question + dim(" [y/n]"))).trim())) {}
-  return a.toLowerCase() === "y";
+  while (!/^(y|n)$/i.test(a = (await ask(dim("? ") + question + dim(" [y/N]"))) )) {
+    print("\n")
+  }
+  print("\n");
+  return a === "y";
 }
 
 function run(
