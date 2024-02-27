@@ -19,15 +19,13 @@ land publish
 ```bash
 $ cd $YOUR_PROJECT_DIR
 $ publish
-
-  1 → v1.0.1
-  2 → v1.1.0
-  3 → v2.0.0
-  4 → v1.0.0-alpha.1
-  5 → v1.0.0-beta.1
-  6 → v1.0.0-rc.1
-
-upgrade to: ▏
+> 1.0.1
+  1.1.0
+  2.0.0
+  1.0.0-alpha.1
+  1.0.0-beta.1
+  1.0.0-rc.1
+▏
 ```
 
 **Publish** will create a `version.ts` file in your project root directory if it doesn't exist.
