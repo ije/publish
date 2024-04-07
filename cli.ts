@@ -122,12 +122,12 @@ const clearLine = async () => {
 };
 
 async function ask(question = ":") {
-  Deno.stdin.setRaw(true, { cbreak: true });
+  Deno.stdin.setRaw(false);
   await print(question + " ");
   const buf = new Uint8Array(8);
   const n = <number> await Deno.stdin.read(buf);
   if (buf[0] === 13) { // enter
-    return "n"
+    return "n";
   }
   const answer = new TextDecoder().decode(buf.subarray(0, n));
   return answer.trim();
@@ -160,22 +160,17 @@ async function select(list: string[]): Promise<number> {
       await clearLine();
     }
   }
+  Deno.stdin.setRaw(false);
   return selected;
 }
 
 async function confirm(question = "are you sure?") {
   let a: string;
-  while (!/^(y|n)$/i.test(a = (await ask(dim("? ") + question + dim(" [y/N]"))) )) {
-    print("\n")
-  }
-  print("\n");
+  while (!/^(y|n)?$/i.test(a = await ask(dim("? ") + question + dim(" [y/N]")))) {}
   return a === "y";
 }
 
-function run(
-  command: string,
-  ...args: string[]
-): Promise<Deno.CommandStatus> {
+function run(command: string, ...args: string[]): Promise<Deno.CommandStatus> {
   const cmd = new Deno.Command(command, {
     args,
     stdout: "inherit",
@@ -184,10 +179,7 @@ function run(
   return cmd.spawn().status;
 }
 
-async function $run(
-  command: string,
-  ...args: string[]
-): Promise<string> {
+async function $run(command: string, ...args: string[]): Promise<string> {
   const cmd = new Deno.Command(command, {
     args,
     stdout: "piped",
